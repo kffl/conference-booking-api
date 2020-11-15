@@ -1,0 +1,359 @@
+openapi: 3.0.0
+info:
+  description: "REST API for a conference room booking system."
+  version: 1.0.0
+  title: Conference booking
+paths:
+# część Tomasza - WIP
+  "/event":
+      get:
+        tags:
+          - event
+        summary: List of user's events
+        responses:
+          "200":
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        $ref: "#/components/schemas/Event/properties/id"
+                      name:
+                        $ref: "#/components/schemas/Event/properties/name"
+                      date_start:
+                        $ref: "#/components/schemas/Event/properties/date_start"
+                      date_end:
+                        $ref: "#/components/schemas/Event/properties/date_end"
+                      status:
+                        $ref: "#/components/schemas/Event/properties/status"
+          "401":
+            description: Unauthorized
+#end WIP
+  /booking:
+    post:
+      tags:
+        - booking
+      summary: Create a new booking
+      operationId: createBooking
+      requestBody:
+        $ref: "#/components/requestBodies/Booking"
+      responses:
+          "200":
+            description: successful operation
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Booking"
+          "401":
+            description: Unauthorized
+          "409":
+            description: Room not available at that time
+          "405":
+            description: Validation exception
+    put:
+      tags:
+        - booking
+      summary: Update an existing booking
+      operationId: updateBooking
+      requestBody:
+        $ref: "#/components/requestBodies/Booking"
+        # extending request body "Booking" with additional status field
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: "#/components/schemas/Booking/properties/status"
+      responses:
+        "400":
+          description: Invalid ID supplied
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - that booking does not belong to the user sending request
+        "404":
+          description: Booking with that ID not found | Room not found
+        "405":
+          description: Validation exception
+        "409":
+          description: Room not available at that time
+  /booking/findByStatus:
+    get:
+      tags:
+        - booking
+      summary: "Finds user's Bookings by status"
+      description: Multiple status values can be provided with comma separated strings
+      operationId: findBookingsByStatus
+      parameters:
+        - name: status
+          in: query
+          description: Status values that need to be considered for filter
+          required: true
+          explode: true
+          schema:
+            type: array
+            items:
+              $ref:  "#/components/schemas/Booking/properties/status"
+          default: planned
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+        "400":
+          description: Invalid status value
+        "401":
+          description: Unauthorized
+  /booking/findByRoom:
+    get:
+      tags:
+        - booking
+      summary: Finds all Bookings by room on a given day
+      operationId: findBookingsByRoom
+      parameters:
+        - name: room
+          in: query
+          description: id of a room, bookings of which are being searched
+          required: true
+          explode: true
+          schema:
+            $ref:  "#/components/schemas/Room/properties/id"
+        - name: day
+          in: query
+          description: "day on which room's availiability is to be checked"
+          required: true
+          explode: true
+          schema:
+            type: string
+            format: date
+            example: "2020-11-16"
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      $ref: "#/components/schemas/Booking/properties/id"
+                    date_start:
+                      $ref: "#/components/schemas/Booking/properties/date_start"
+                    date_end: 
+                      $ref: "#/components/schemas/Booking/properties/date_end"
+        "400":
+          description: Invalid day
+        "404":
+          description: Room not found
+  "/booking/{bookingId}":
+    get:
+      tags:
+        - booking
+      summary: Find booking by ID
+      description: Returns a single booking
+      operationId: getBookingById
+      parameters:
+        - name: bookingID
+          in: path
+          description: ID of booking to return
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          description: Invalid ID supplied
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - that booking does not belong to the user sending request
+        "404":
+          description: Booking not found
+components:
+  requestBodies:
+    RoomArray:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/Room"
+      description: List of rooms
+      required: true
+    BookingList:
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/Booking"
+      description: List of bookings
+      required: true
+    Room:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Room"
+      description: New room definition
+      required: true
+    Booking:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              room:
+                $ref: "#/components/schemas/Room/properties/id"
+                description: room id
+              date_start:
+                $ref: "#/components/schemas/Booking/properties/date_start"
+              date_end:
+                $ref: "#/components/schemas/Booking/properties/date_end"
+              table_settings:
+                $ref: "#/components/schemas/Booking/properties/table_setting"
+              notes:
+                $ref: "#/components/schemas/Booking/properties/notes"
+                optional: true
+      description: Booking creation schema
+      required: true
+    Event:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Event"
+      description: Event creation schema
+      required: true
+  schemas:
+    Room:
+      type: object
+      required:
+        - id
+        - floor
+        - number
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1337
+        number:
+          type: string
+          example: 190A
+          description: room number
+        floor:
+          type: int64
+          example: 4
+          description: floor number, on which the room is located
+        type:
+          type: string
+          description: room type
+          enum:
+            - conference_small
+            - auditorium
+            - conference_large
+            - computer_lab
+            - other_lab
+    Booking:
+      type: object
+      required:
+        - id
+        - room
+        - date_start
+        - date_end
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+        room:
+          type: int64
+          $ref: "#/components/schemas/Room"
+          description: room id
+        date_start:
+          type: string
+          format: date-time
+        date_end:
+          type: string
+          format: date-time
+        status:
+          type: string
+          description: booking status
+          enum:
+            - planned
+            - in_progress
+            - done
+            - cancelled
+        table_setting:
+          type: string
+          enum:
+            - room_default
+            - empty
+            - custom
+        notes:
+          type: string
+          description: additional info
+          example: Example booking note
+    Event:
+      type: object
+      required:
+        - id
+        - name
+        - date_start
+        - date_end
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 879
+        name:
+          type: string
+          description: event description
+          example: Example name
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        date_start:
+          type: string
+          format: date-time
+        date_end:
+          type: string
+          format: date-time
+        status:
+          description: booking status
+          enum:
+            - planned
+            - in_progress
+            - done
+            - cancelled
+        notes:
+          type: string
+          description: additional info
+          example: Example event note
+    ApiResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int32
+        type:
+          type: string
+        message:
+          type: string

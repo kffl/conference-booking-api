@@ -99,7 +99,6 @@ paths:
             type: array
             items:
               $ref:  "#/components/schemas/Booking/properties/status"
-          default: planned
       responses:
         "200":
           description: successful operation
@@ -164,7 +163,7 @@ paths:
       description: Returns a single booking
       operationId: getBookingById
       parameters:
-        - name: bookingID
+        - name: bookingId
           in: path
           description: ID of booking to return
           required: true
@@ -257,7 +256,8 @@ components:
           example: 190A
           description: room number
         floor:
-          type: int64
+          type: integer
+          format: int64
           example: 4
           description: floor number, on which the room is located
         type:

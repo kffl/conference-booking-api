@@ -4,6 +4,169 @@ info:
   version: 1.0.0
   title: Conference booking
 paths:
+  /room:
+    post:
+      tags:
+        - room
+      summary: Add a new room - admin endpoint
+      description: ""
+      operationId: addRoom
+      requestBody:
+        $ref: "#/components/requestBodies/Room"
+      responses:
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Access denied - used doesn't have admin permissions
+        "405":
+          description: Invalid input
+    put:
+      tags:
+        - room
+      summary: Update an existing room - admin endpoint
+      description: ""
+      operationId: updateRoom
+      requestBody:
+        $ref: "#/components/requestBodies/Room"
+      responses:
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Access denied - used doesn't have admin permissions
+        "404":
+          description: Room not found
+        "405":
+          description: Validation exception
+  "/room/{roomId}":
+    get:
+      tags:
+        - room
+      summary: Find room by ID
+      description: Returns a single room
+      operationId: getRoomById
+      parameters:
+        - name: roomId
+          in: path
+          description: ID of room to return
+          required: true
+          schema:
+            $ref: "#/components/schemas/Room/properties/id"
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
+        "400":
+          description: Invalid ID supplied
+        "401":
+          description: Unauthenticated
+        "404":
+          description: Room not found
+    delete:
+      tags:
+        - room
+      summary: Deletes a Room
+      description: ""
+      operationId: deleteRoom
+      parameters:
+        - name: roomId
+          in: path
+          description: Room id to delete
+          required: true
+          schema:
+            $ref: "#/components/schemas/Room/properties/id"
+      responses:
+        "400":
+          description: Invalid ID supplied
+        "401":
+          description: Unauthenticated
+        "403":
+          description: Access denied
+        "404":
+          description: Room not found
+        "409":
+          description: Conflict - there are upcoming bookings assigned to that room
+  /room/findByFloor:
+    get:
+      tags:
+        - room
+      summary: Finds Rooms by Floor
+      description: ""
+      operationId: findRoomByFloor
+      parameters:
+        - name: Floor
+          in: query
+          description: Floor to filter by
+          required: true
+          schema:
+            $ref: "#/components/schemas/Room/properties/floor"
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Room"
+        "400":
+          description: Invalid floor value
+        "401":
+          description: Unauthenticated
+  /room/findByType:
+    get:
+      tags:
+        - room
+      summary: Finds Rooms by Type
+      description: ""
+      operationId: findRoomByType
+      parameters:
+        - name: Type
+          in: query
+          description: Type to filter by
+          required: true
+          schema:
+            $ref: "#/components/schemas/Room/properties/type"
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Room"
+        "400":
+          description: Invalid tag value
+        "401":
+          description: Unauthenticated
+  /room/findByNumber:
+    get:
+      tags:
+        - room
+      summary: Finds Room by Number
+      description: ""
+      operationId: findRoomByNumber
+      parameters:
+        - name: Number
+          in: query
+          description: Room number to find by
+          required: true
+          schema:
+            $ref: "#/components/schemas/Room/properties/number"
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: "#/components/schemas/Room"
+        "400":
+          description: Invalid number value
   /booking:
     post:
       tags:
@@ -339,6 +502,7 @@ components:
           type: integer
           format: int64
           example: 1337
+          description: Room id
         number:
           type: string
           example: 190A
@@ -369,6 +533,7 @@ components:
         id:
           type: integer
           format: int64
+          description: Booking id
         room:
           type: integer
           format: int64
@@ -410,7 +575,7 @@ components:
         bookings:
           type: array
           items:
-            $ref: '#/components/schemas/Booking'
+            $ref: '#/components/schemas/Booking/properties/id'
         date_start:
           type: string
           format: date-time
@@ -437,3 +602,4 @@ components:
           type: string
         message:
           type: string
+

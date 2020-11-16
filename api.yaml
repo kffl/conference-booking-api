@@ -14,6 +14,12 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/Room"
       responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Room"
         "401":
           description: Unauthenticated
         "403":
@@ -29,6 +35,12 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/Room"
       responses:
+        "200":
+            description: successful operation - returns updated Room
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Room"
         "401":
           description: Unauthenticated
         "403":
@@ -78,6 +90,8 @@ paths:
           schema:
             $ref: "#/components/schemas/Room/properties/id"
       responses:
+        "200":
+          description: successful operation
         "400":
           description: Invalid ID supplied
         "401":
@@ -135,7 +149,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                type: array
                 items:
                   $ref: "#/components/schemas/Room"
         "400":
@@ -162,7 +176,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                type: array
                 items:
                   $ref: "#/components/schemas/Room"
         "400":
@@ -204,6 +218,12 @@ paths:
                 status:
                   $ref: '#/components/schemas/Booking/properties/status'
       responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
         '400':
           description: Invalid ID supplied
         '401':
@@ -368,27 +388,6 @@ paths:
           description: Forbidden.
         '405':
           description: Invalid data.
-  '/event/cancel/{eventId}':
-    put:
-      tags:
-        - event
-      summary: Cancel event
-      parameters:
-        - name: eventId
-          in: path
-          description: ID of booking to return
-          required: true
-          schema:
-            $ref: '#/components/schemas/Event/properties/id'
-      responses:
-        '200':
-          description: Operation successful.
-        '400':
-          description: Invalid ID.
-        '401':
-          description: Unauthorized.
-        '403':
-          description: Forbidden.
   '/event/{eventId}':
     get:
       tags:
@@ -414,6 +413,59 @@ paths:
           description: Unauthorized.
         '403':
           description: Forbidden.
+  '/event/{eventId}/cancel':
+    put:
+      tags:
+        - event
+      summary: Cancel event
+      parameters:
+        - name: eventId
+          in: path
+          description: ID of event to return
+          required: true
+          schema:
+            $ref: '#/components/schemas/Event/properties/id'
+      responses:
+        '200':
+          description: Operation successful.
+        '400':
+          description: Invalid ID.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+  '/event/{eventId}/bookings':
+    put:
+      tags:
+        - event
+      summary: Update bookings assigned to an event
+      parameters:
+        - name: eventId
+          in: path
+          description: ID of event, bookings of which are to be altered
+          required: true
+          schema:
+            $ref: '#/components/schemas/Event/properties/id'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/Booking/properties/id'
+      responses:
+        '200':
+          description: Operation successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          description: Invalid ID.
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden - event or booking not belonging to the user making request
 components:
   requestBodies:
     RoomArray:
@@ -576,6 +628,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Booking/properties/id'
+          example: [123, 54, 2345]
         date_start:
           type: string
           format: date-time
@@ -602,4 +655,5 @@ components:
           type: string
         message:
           type: string
+
 
